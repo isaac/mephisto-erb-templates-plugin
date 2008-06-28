@@ -18,16 +18,19 @@ class ErbTemplate < BaseDrop
     @layout = layout
     @template = template
     @controller = controller
+    @view = ActionView::Base.new(controller.view_paths, assigns, controller).extend(controller.master_helper_module)
+    assigns.each { |name, value| instance_variable_set "@#{name}", value }    
     @assigns = assigns
     # psq-TODO: assigns contains mode, site, articles, section (more or less depending on mode,
     # consider using missing method to expose all of them to templates)
     # "section" would be nicer than
     # "@assigns['section']"
+    assigns.each { |name, value| instance_variable_set "@#{name}", value }
     @context = ::Liquid::Context.new(assigns, {}, false) # assigns, register, rethrow error
 
     @mode = assigns['mode']
     @archive_date = assigns['archive_date']
-
+    
     @articles = assigns['articles']
     @articles.each { |article| article.context = @context } if (@articles)
     @article = assigns['article']
@@ -38,7 +41,7 @@ class ErbTemplate < BaseDrop
     @submitted.each{ |k, v| @submitted[k] = CGI::escapeHTML(v) }
     @errors = @context['errors']
     @message = @context['message']
-
+    
     @site = @site_source.to_liquid
     @site.context = @context
     if (section)
